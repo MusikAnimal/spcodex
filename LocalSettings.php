@@ -33,11 +33,11 @@ $wgScriptPath = "";
 $wgArticlePath = "/$1";
 $actions = array( 'view', 'edit', 'watch', 'unwatch', 'delete','revert', 'rollback', 'protect', 'unprotect', 'markpatrolled', 'render', 'submit', 'history', 'purge', 'info' );
 foreach ( $actions as $action ) {
-    $wgActionPaths[$action] = "/$action/$1";
+	$wgActionPaths[$action] = "/$action/$1";
 }
 
 ## The protocol and server name to use in fully-qualified URLs
-$wgServer = "http://208.68.39.85";
+$wgServer = "https://spcodex.wiki";
 
 ## The URL path to static resources (images, scripts, etc.)
 $wgResourceBasePath = $wgScriptPath;
@@ -62,10 +62,10 @@ $wgEnableUserEmail = true; # UPO
 $wgSMTP = [
 	#'host' => 'ssl://smtp.gmail.com',
 	'host' => 'ssl://mail.hover.com',
-	'IDHost' => '208.68.39.85',
+	'IDHost' => 'spcodex.wiki',
 	'port' => 465,
-	'username' => $wmgStmpUsername,
-	'password' => $wmgStmpPassword,
+	'username' => $wmgSmtpUsername,
+	'password' => $wmgSmtpPassword,
 	'auth' => true,
 ];
 
@@ -86,9 +86,15 @@ $wgDBTableOptions = "ENGINE=InnoDB, DEFAULT CHARSET=binary";
 # This has no effect unless $wgSharedDB is also set.
 $wgSharedTables[] = "actor";
 
-## Shared memory settings
+## Shared memory and cache settings
 $wgMainCacheType = CACHE_ACCEL;
 $wgMemCachedServers = [];
+$wgParserCacheType = CACHE_DB;
+$wgParserCacheExpireTime = 60 * 60 * 24 * 30;
+$wgResourceLoaderMaxage = [
+	'versioned' => 30 * 24 * 60 * 60, // 30 days
+	'unversioned' => 30 * 24 * 60 * 60
+];
 
 ## To enable image uploads, make sure the 'images' directory
 ## is writable, then set this to true:
@@ -100,6 +106,10 @@ $wgImageMagickConvertCommand = "/usr/bin/convert";
 $wgUseInstantCommons = true;
 
 $wgFileExtensions[] = 'svg';
+$wgFileExtensions[] = 'webp';
+
+$wgAllowCopyUploads = true;
+$wgCopyUploadsFromSpecialUpload = true;
 
 # Periodically send a pingback to https://www.mediawiki.org/ with basic data
 # about this MediaWiki instance. The Wikimedia Foundation shares this data
@@ -115,17 +125,24 @@ $wgLocaltimezone = "UTC";
 ## Set $wgCacheDirectory to a writable directory on the web server
 ## to make your wiki go slightly faster. The directory should not
 ## be publicly accessible from the web.
-#$wgCacheDirectory = "$IP/cache";
+$wgCacheDirectory = "$IP/cache";
+
+# File caching for logged-out users
+$wgUseFileCache = true;
+$wgUseGzip = true;
+
+# Rate limiting reads from disruptive bots
+#$wgRateLimits['read']['anon'] = [ 3, 1 ];
 
 # Changing this will log out all existing sessions.
-$wgAuthenticationTokenVersion = "1";
+$wgAuthenticationTokenVersion = "2";
 
 ## For attaching licensing metadata to pages, and displaying an
 ## appropriate copyright notice / icon. GNU Free Documentation
 ## License and Creative Commons licenses are supported so far.
 $wgRightsPage = ""; # Set to the title of a wiki page that describes your license/copyright
 $wgRightsUrl = "https://creativecommons.org/licenses/by-sa/4.0/";
-$wgRightsText = "Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)";
+$wgRightsText = "Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0)";
 $wgRightsIcon = "$wgResourceBasePath/resources/assets/licenses/cc-by-sa.png";
 
 # Path to the GNU diff3 utility. Used for conflict resolution.
@@ -152,12 +169,14 @@ wfLoadExtension( 'CiteThisPage' );
 wfLoadExtension( 'CodeEditor' );
 wfLoadExtension( 'CodeMirror' );
 wfLoadExtension( 'ConfirmEdit' );
-wfLoadExtension( 'ConfirmEdit/hCaptcha' );
+#wfLoadExtension( 'ConfirmEdit/hCaptcha' );
+wfLoadExtension( 'ConfirmEdit/QuestyCaptcha' );
 wfLoadExtension( 'ContactPage' );
 wfLoadExtension( 'DarkMode' );
 wfLoadExtension( 'Disambiguator' );
 wfLoadExtension( 'DiscussionTools' );
 wfLoadExtension( 'Echo' );
+#wfLoadExtension( 'Flow' );
 wfLoadExtension( 'Gadgets' );
 wfLoadExtension( 'GeoData' );
 wfLoadExtension( 'InputBox' );
@@ -173,6 +192,7 @@ wfLoadExtension( 'OATHAuth' );
 wfLoadExtension( 'PageForms' );
 wfLoadExtension( 'PageImages' );
 wfLoadExtension( 'ParserFunctions' );
+#wfLoadExtension( 'PlaceNewSection' );
 wfLoadExtension( 'Poem' );
 wfLoadExtension( 'Popups' );
 wfLoadExtension( 'ReplaceText' );
@@ -185,6 +205,7 @@ wfLoadExtension( 'TemplateWizard' );
 wfLoadExtension( 'TextExtracts' );
 wfLoadExtension( 'Thanks' );
 wfLoadExtension( 'Timeline' );
+wfLoadExtension( 'UploadWizard' );
 wfLoadExtension( 'UrlShortener' );
 wfLoadExtension( 'Variables' );
 wfLoadExtension( 'VEForAll' );
@@ -197,13 +218,16 @@ wfLoadExtension( 'YouTube' );
 # End of automatically generated settings.
 # Add more configuration options below.
 
-$wgShowExceptionDetails = true;
+# $wgShowExceptionDetails = true;
 
 # Custom namespaces
 define("NS_TAB", 3000);
 define("NS_TAB_TALK", 3001);
 $wgExtraNamespaces[NS_TAB] = 'Tab';
 $wgExtraNamespaces[NS_TAB_TALK] = 'Tab_talk';
+
+# We consider the tabs to be content
+$wgContentNamespaces[] = NS_TAB;
 
 # Kartographer
 $wgKartographerMapServer = "https://tile.openstreetmap.org";
@@ -213,6 +237,20 @@ $wgPFEnableStringFunctions = true;
 
 # Job queue
 $wgJobRunRate = 0;
+
+# Logging
+$wgDBerrorLog = '/var/log/mediawiki/dberror.log';
+$wgDebugLogGroups = [
+	'exception' => '/var/log/mediawiki/exception.log',
+	'resourceloader' => '/var/log/mediawiki/resourceloader.log',
+	'ratelimit' => '/var/log/mediawiki/ratelimit.log',
+];
+
+# Memory
+$wgMemoryLimit = '200M';
+
+# Display titles
+$wgRestrictDisplayTitle = false;
 
 # MobileFrontend / Minerva
 $wgMinervaTalkAtTop['base'] = true;
@@ -246,24 +284,82 @@ $wgContactConfig['default'] = [
 ];
 $wgCaptchaTriggers['contactpage'] = true;
 $wgHooks['SkinAddFooterLinks'][] = function( Skin $skin, string $key, array &$footerlinks ) {
-    global $wgServer;
-    if ( $key === 'places' ) {
-        $footerlinks['contact'] = Html::element( 'a',
-            [
-                'href' => "$wgServer/Special:Contact",  // URL to "Special:Contact"
-                'rel' => 'noreferrer noopener'  // not required, but recommended for security reasons
-            ],
-        $skin->msg( 'contactpage-label' )->text()
-        );
-    };
+	global $wgServer;
+	if ( $key === 'places' ) {
+		$footerlinks['contact'] = Html::element( 'a',
+			[
+				'href' => "$wgServer/Special:Contact",  // URL to "Special:Contact"
+				'rel' => 'noreferrer noopener'  // not required, but recommended for security reasons
+			],
+			$skin->msg( 'contactpage-label' )->text()
+		);
+	};
 };
 
+# ConfirmEdit / QuestyCaptcha
+$wgCaptchaTriggers['createaccount'] = true;
+
+# DiscussionTools
+$wgDiscussionToolsEnable = true;
+$wgExtraSignatureNamespaces = [NS_PROJECT];
+
+# VisualEditor
+$wgVisualEditorAvailableNamespaces = [
+	'SPCodex' => true,
+];
+
+# Popups
+$wgPopupsReferencePreviewsBetaFeature = false;
+
+# External links
+# $wgExternalLinkTarget = '_blank';
+
+# UrlShortener
+$wgUrlShortenerTemplate = '/r/$1';
+
+# CodeMirror
+$wgDefaultUserOptions['usecodemirror'] = 1;
+
+# UploadWizard
+$wgUploadWizardConfig['tutorial']['skip'] = true;
+$wgUploadWizardConfig['uwLanguages'] = ['en' => 'English'];
+$wgUploadWizardConfig['licenses'] = [
+	'non-free-album-cover' => [
+		'msg' => 'non-free-album-cover',
+		'icons' => [ 'copyright' ],
+	],
+	'non-free-image' => [
+		'msg' => 'non-free-image',
+		'icons' => [ 'copyright' ],
+	],
+	'cc-by-nc-sa-4.0' => [
+		'msg' => 'mwe-upwiz-license-cc-by-nc-sa-4.0',
+		'icons' => [ 'cc-by', 'cc-nc', 'cc-sa' ],
+		'url' => '//creativecommons.org/licenses/by-nc-sa/4.0/',
+	],
+];
+
+# Scribunto
+$wgScribuntoEngineConf['luastandalone']['cpuLimit'] = 20;
+
 # Permissions
-$wgGroupPermissions['*']['runcargoqueries'] = false; // Security reasons
+#$wgGroupPermissions['*']['runcargoqueries'] = false; // Security reasons
+$wgGroupPermissions['*']['urlshortener-create-url'] = false;
+$wgGroupPermissions['user']['urlshortener-create-url'] = true;
 $wgGroupPermissions['sysop']['interwiki'] = true;
 $wgGroupPermissions['sysop']['runcargoqueries'] = true;
+$wgGroupPermissions['sysop']['deletechangetags'] = true;
+$wgGroupPermissions['sysop']['deletelogentry'] = true;
+$wgGroupPermissions['sysop']['deleterevision'] = true;
+$wgGroupPermissions['user']['upload_by_url'] = true;
+
+# Add Autopatrolled
+$wgGroupPermissions['autopatrolled']['autopatrol'] = true;
+
+$wgAllowSiteCSSOnRestrictedPages = true;
 
 $wgLocaltimezone = "UTC";
 date_default_timezone_set( $wgLocaltimezone );
 $wgFragmentMode = [ 'html5' ];
 
+#$wgShowExceptionDetails = true;
